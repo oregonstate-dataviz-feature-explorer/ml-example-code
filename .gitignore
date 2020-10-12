@@ -71,6 +71,7 @@ doc/build
 doc/cdoc/build
 # Egg metadata
 *.egg-info
+*.ipynb_checkpoints
 
 # Logs and databases #
 ######################
