@@ -2,12 +2,12 @@
 """Build and test a logistic regression model"""
 
 import os
-import multiprocessing
+from sys import argv
+
 import numpy as np
 import pandas as pd
+from mlflow import log_artifacts, log_metric, log_param
 from sklearn import linear_model, metrics, model_selection
-from sys import argv
-from mlflow import log_metric, log_param, log_artifacts
 
 if __name__ == "__main__":
     dat_in_pth = "../data/features.pkl"
