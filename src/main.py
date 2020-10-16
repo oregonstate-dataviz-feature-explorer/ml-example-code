@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     ###########################################################################
     # define log reg cv object
-    log_cv = linear_model.LogisticRegressionCV(
+    logreg_cv = linear_model.LogisticRegressionCV(
         solver="liblinear",
         Cs=np.logspace(-4, 4, 100),
         cv=5,
@@ -52,13 +52,18 @@ if __name__ == "__main__":
     )
 
     # train model
-    log_cv.fit(train.iloc[:, :-1], y=train["class"])
+    train_data = train.iloc[:, :-1]
+    logreg_cv.fit(train_data, y=train["class"])
+
+    # from mlflow.models.signature import infer_signature
+    signature = mlf.models.infer_signature(train_data, logreg_cv.predict(train_data))
+    mlf.sklearn.log_model(logreg_cv, "logreg_test_model", signature=signature)
 
     ###########################################################################
     # test final model on heldout test set
     y_true, y_prediction_probabilities = (
         heldout_test["class"],
-        log_cv.predict_proba(heldout_test.iloc[:, :-1]),
+        logreg_cv.predict_proba(heldout_test.iloc[:, :-1]),
     )
 
     ###########################################################################
@@ -96,7 +101,7 @@ if __name__ == "__main__":
 
     mlf.log_metrics(
         {
-            "C": log_cv.C_[0],
+            "C": logreg_cv.C_[0],
             "auROC": heldout_perf_roc,
             "auPRC": heldout_perf_prc,
             "youden_T": youden_T,
@@ -107,7 +112,7 @@ if __name__ == "__main__":
         }
     )
 
-    coefficients = pd.DataFrame(log_cv.coef_, columns=dat_df.columns[:-1])
+    coefficients = pd.DataFrame(logreg_cv.coef_, columns=dat_df.columns[:-1])
 
     # save coefficient values
     coefficients.to_csv(coefs_pth, header=True)
