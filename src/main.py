@@ -2,19 +2,22 @@
 """Build and test a logistic regression model"""
 
 import os
+from pathlib import Path
 from sys import argv
 
+import mlflow as mlf
 import numpy as np
 import pandas as pd
-from mlflow import log_artifacts, log_metric, log_param
 from sklearn import linear_model, metrics, model_selection
 
 if __name__ == "__main__":
-    dat_in_pth = "../data/features.pkl"
+    dat_in_pth = Path("data/features.pkl").resolve()
     dat_df = pd.read_pickle(dat_in_pth)
 
     results_dir = "results"
-    seed = 8675309
+    seed = int(argv[1])
+    n_procs = int(argv[2])
+
     np.random.seed(seed)
 
     if not os.path.exists(results_dir):
@@ -37,8 +40,6 @@ if __name__ == "__main__":
 
     ###########################################################################
     # define log reg cv object
-    n_procs = 10
-
     log_cv = linear_model.LogisticRegressionCV(
         solver="liblinear",
         Cs=np.logspace(-4, 4, 100),
@@ -93,7 +94,7 @@ if __name__ == "__main__":
 
     heldout_perf_f1 = 2 * ((PPV * TPR) / (PPV + TPR))
 
-    perf_metrics = pd.Series(
+    mlf.log_metrics(
         {
             "C": log_cv.C_[0],
             "auROC": heldout_perf_roc,
@@ -103,14 +104,12 @@ if __name__ == "__main__":
             "specificity": TNR,
             "precision": PPV,
             "f1": heldout_perf_f1,
-            "seed": seed,
         }
     )
 
     coefficients = pd.DataFrame(log_cv.coef_, columns=dat_df.columns[:-1])
 
-    # save metrics
-    perf_metrics.to_csv(test_performance_pth, header=True)
-
     # save coefficient values
     coefficients.to_csv(coefs_pth, header=True)
+
+    mlf.log_artifacts(results_dir)
