@@ -8,5 +8,6 @@ conda_env: env.yml
 entry_points:
   main:
     parameters:
-      input_string: string
-    command: "python src/ex.py {input_string}"
+      seed: int
+      n_procs: int
+    command: "python src/main.py {seed} {n_procs}"
