@@ -99,3 +99,4 @@ Thumbs.db
 #######
 *.code-workspace
 books/results
+mlruns
